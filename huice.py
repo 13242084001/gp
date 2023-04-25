@@ -10,7 +10,7 @@ import logging
 
 
 
-logging.basicConfig(level=logging.INFO, format="%(message)s", filename="./xuangu.log", filemode="a")
+logging.basicConfig(level=logging.DEBUG, format="%(message)s", filename="./xuangu.log", filemode="a")
 
 user_agent_list = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36 Edg/100.0.1185.29",
                    "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36",
@@ -27,7 +27,7 @@ headers = {':authority': 'stock.xueqiu.com',
            'accept-encoding': 'gzip, deflate, br',
            'accept-language': 'zh-CN,zh;q=0.9',
            'cache-control': 'max-age=0',
-           'cookie': 'device_id=04df9bee31d96920289fbec1a4e1e03a; s=cf122uuhnb; bid=1fa9bc3995022e7a50364963f5000816_l7bkxqzb; xq_is_login=1; Hm_lvt_1db88642e346389874251b5a1eded6e3=1681089228; cookiesu=321682385111462; xq_a_token=f704e2235248250ea622aff278faa3ad2dcf5c17; xqat=f704e2235248250ea622aff278faa3ad2dcf5c17; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjY0ODQ2ODUzODUsImlzcyI6InVjIiwiZXhwIjoxNjg0OTgwNDE1LCJjdG0iOjE2ODIzODg0MTU5NTMsImNpZCI6ImQ5ZDBuNEFadXAifQ.atGhlm10Wgt-wNq7VCPKgzIQMd5RaFH65lPDf10YM9-cTt5crS3igFP0iRPb-I2hLRK3i9xoVqubE3IXAllG8dq_SYgetImaBWnnHRJBctwCX_4U30Zh6YrL2VFImzkCijWNBtMs_jBHJRBMbebMR6KiGlYAyiMl4RaPVjwOSFcWZ6jDYmnvEq4eV7ag74pVp1PNMqg5Spsawop_aI8x6Lj2GztkTJbhfqTWeQp-0PpeaKY3ZqKRAFvyJ3lqGr6GhcwFMkJR8eExaJLwYqMjAELaRhMl0Olun4Jxa_5dVYn5nLEWUGXqBPeh_gTXjXEsxxdBTfhVRTF_oXjimMJikw; xq_r_token=d52281f19ef5362552e86820e063c625a03ffb8a; u=6484685385; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1682388492',
+           'cookie': 'device_id=04df9bee31d96920289fbec1a4e1e03a; s=cf122uuhnb; bid=1fa9bc3995022e7a50364963f5000816_l7bkxqzb; xq_is_login=1; xq_a_token=02fe272962bcd5df06518e113f120bcfb0dc874f; xqat=02fe272962bcd5df06518e113f120bcfb0dc874f; xq_r_token=5fa7a40353195e61c8ff4647356ba9b8b23c5d9f; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjY0ODQ2ODUzODUsImlzcyI6InVjIiwiZXhwIjoxNjgzNjgxMjI3LCJjdG0iOjE2ODEwODkyMjc1NjAsImNpZCI6ImQ5ZDBuNEFadXAifQ.XXc5nUB1M5KfkqM274-k6nVUBJtSgyUpH8SvA9n7RV4PPOQxIoqkxjkm8_7RgwtlXV7yr7YDN0a6wwLoh4S_gnm68Bg0teffwke-WXYDA-fEWidiFB6ke-kBEH7JPGOXhE20cxlPUr1mZ5jioLqodH925t8XrKyR8EUcMBTZFW4Kw0ocl9u2xa-T0c4wJaL7tpTZWQpPEbxBTISq5Gm3B7CKAkAonJSVv5deOchVyvxs4M5UAe2VJjwrCpuNM2L90GJ0_qo94g0wkc65aLZN7og2QY362ag_PnFPP4t1c50Mu2bpUj_YzEGnFEc9Lm8_vDtMtWnuLpAG-RIlcpXW8w; Hm_lvt_1db88642e346389874251b5a1eded6e3=1681089228; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1682236616',
            'sec-ch-ua': '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
            'sec-ch-ua-mobile': '?0',
            'sec-ch-ua-platform': '"Windows"',
@@ -41,10 +41,8 @@ headers = {':authority': 'stock.xueqiu.com',
 
 
 dtime = datetime.datetime.now()
-
 u_time = (time.mktime(dtime.timetuple()) + 12 * 3600) * 1000
 timestamp = str(u_time).split(".")[0]
-print(timestamp)
 
 
 #就算数据帧
@@ -89,8 +87,6 @@ def calc_zb(df):
     df['ma30'] = talib.SMA(df['close'],timeperiod=30)
     df['ma60'] = talib.SMA(df['close'],timeperiod=60)
     df['ma250'] = talib.SMA(df['close'],timeperiod=250)
-    df['vol5'] = talib.MA(df['liang'],timeperiod=5, matype=0)
-    df['vol10'] = talib.MA(df['liang'],timeperiod=10, matype=0)
     #计算macd
     df['dif'], df['dea'], df['bar'] = talib.MACD(df['close'].values, fastperiod=12, slowperiod=26, signalperiod=9)
     return df
@@ -118,11 +114,11 @@ for i in  data:
         zui_di_jia = i.get("f16")
         zui_gao_jia = i.get("f15")
         kai_pan_jia = i.get("f17")
-        pe = i.get("f9")
+        #pe = i.get("f9")
         shang_ying_xian = (i.get("f15") - i.get("f2"))/i.get("f2")
         #shang_ying_xian = (i.get("f15") / ((dang_qian_jia / (((zhang_fu / 100) + 1))) - 1 - (zhang_fu / 100)
         #liu_tong_zhi = i.get("f21")/100000000
-        if 1 < zhang_fu < 6 and cheng_jiao_liang > 1 and dang_qian_jia > kai_pan_jia and shang_ying_xian < 0.05 and pe > 0 and huan_shou < 10:
+        if 1 < zhang_fu < 6 and cheng_jiao_liang > 1 and dang_qian_jia > kai_pan_jia and shang_ying_xian < 0.05 and huan_shou < 10:
 
             #url = "http://q.stock.sohu.com/hisHq?code=cn_{0}&start={1}&end={2}".format(code[3:], start_date.replace("-", ""), end_date.replace("-", ""))
 
@@ -131,7 +127,7 @@ for i in  data:
             day_url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={0}&begin={1}&period=day&type=before&count=-300&indicator=kline".format(code, timestamp)
         
             week_url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={0}&begin={1}&period=week&type=before&count=-300&indicator=kline".format(code, timestamp)
-            print(day_url)
+            #print(url)
 
 
             day_df = get_data_df(day_url)
@@ -146,8 +142,6 @@ for i in  data:
             ma5 = today_data.get('ma5')
             ma5_distance = (low - ma5)/ma5 * 100
             fang_liang = yesterday_data = today_data.get('liang') / yesterday_data.get('liang')
-            day_mavol5 = today_data.get('vol5')
-            day_mavol10 = today_data.get('vol10')
             day_macd = today_data.get("bar") * 2
             to_day_j = today_data.get("J")
             to_day_k = today_data.get("K")
@@ -185,7 +179,7 @@ for i in  data:
             for x in week_ma_data_list:
                 if (week_max_ma * 0.95) <= x:
                     w_len_list.append(x)
-            if dang_qian_jia > max_ma  and len(len_list) >= 2 and dang_qian_jia >= week_max_ma and len(w_len_list) >= 2 and ma5_distance < 2:
+            if dang_qian_jia > max_ma  and len(len_list) >= 2 and dang_qian_jia >= week_max_ma and len(w_len_list) >= 2 and fang_liang > 1.2 and ma5_distance < 2:
                 if day_macd > 0 and week_macd > 0:
                   
                     if (100 > to_day_j > to_day_k > to_day_d > 42 and to_day_d < 80) and (100 > to_week_j > to_week_k > to_week_d and to_week_d < 80):
