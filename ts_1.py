@@ -173,8 +173,11 @@ for i in  data:
                         week_ma_data_list.append(v)
 
             #print(ma_data_list, week_ma_data_list)
-            max_ma = max(ma_data_list)
-            week_max_ma = max(week_ma_data_list)
+            try:
+                max_ma = max(ma_data_list)
+                week_max_ma = max(week_ma_data_list)
+            except Exception as e:
+                week_max_ma = 0
             
             len_list = []
             w_len_list = []
@@ -185,7 +188,7 @@ for i in  data:
             for x in week_ma_data_list:
                 if (week_max_ma * 0.95) <= x:
                     w_len_list.append(x)
-            if dang_qian_jia > max_ma  and len(len_list) >= 2 and dang_qian_jia >= week_max_ma and len(w_len_list) >= 2 and ma5_distance < 2:
+            if dang_qian_jia > max_ma  and len(len_list) >= 2 and dang_qian_jia >= week_max_ma and len(w_len_list) >= 2 and ma5_distance < 2 and day_mavol5 > day_mavol10:
                 if day_macd > 0 and week_macd > 0:
                   
                     if (100 > to_day_j > to_day_k > to_day_d > 42 and to_day_d < 80) and (100 > to_week_j > to_week_k > to_week_d and to_week_d < 80):
