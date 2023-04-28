@@ -133,6 +133,8 @@ for bk in bks:
         day_df = calc_zb(day_df)
         #print(day_df.iloc[-1].to_dict())
         today_data = day_df.iloc[-1].to_dict()
+        last_day = today_data.get("day")
+        now_day = str(dtime).split()[0]
         yesterday_data = day_df.iloc[-2].to_dict()
         low = today_data.get('low')
         ma5 = today_data.get('ma5')
@@ -161,42 +163,49 @@ for bk in bks:
             if (max_ma * 0.97) <= x:
                 len_list.append(x)
                 #logging.info(len(len_list))
-        if dang_qian_jia > max_ma:
+        if dang_qian_jia > max_ma and day_mavol5 > day_mavol10 and now_day == last_day:
             bk_list.append(bk)
 
-print(bk_list)
-"""
-bk_list = ['BK0041中药', 'BK0043医药商业', 'BK0049公路铁路运输', 'BK0055银行', 'BK0455电子发票', 'BK0461油品改革', 'BK0468尾气治理', 'BK0490超导', 'BK0522西安自贸区', 'BK0536医药电商', 'BK0543高校', 'BK0584微信小程序', 'BK0620空铁WIFI', 'BK0629高送转预期', 'BK0631芬太尼', 'BK0657超级真菌', 'BK0663郭台铭概念', 'BK0664眼科医疗', 'BK0676青蒿素', 'BK0677沪伦通概念', 'BK0680仿制药一致性评价', 'BK0681半年报预增', 'BK0684中船系', 'BK0694非科创次新股', 'BK0709氮化镓', 'BK0745高送转', 'BK0775冬奥会', 'BK0780新冠治疗']
-"""
+#print(bk_list)
+
+#bk_list = ['BK0041中药', 'BK0043医药商业', 'BK0064传媒', 'BK0432文化传媒', 'BK0447手机游戏', 'BK0459上海国企改革', 'BK0513网络游戏', 'BK0567电子竞技', 'BK0597互联网保险', 'BK0617知识产权保护', 'BK0657超级真菌', 'BK0664眼科医疗', 'BK0676青蒿素', 'BK0680仿制药一致性评价', 'BK0684中船系', 'BK0696云游戏', 'BK0759NFT概念', 'BK0780新冠治疗']
 all_code = []
 
 for bk in bk_list:
     bk_co_url = "https://stock.xueqiu.com/v5/stock/forum/stocks.json?ind_code={0}".format(bk[:6])
+    #print(bk_co_url)
+    #time.sleep(0.5)
     sessions = requests.session()
     sessions.mount(bk_co_url, HTTP20Adapter())
     res = sessions.get(bk_co_url, headers=headers)
+    #print(res.text)
     bk_code_list = res.json().get("data").get("items")
     for co in bk_code_list:
+     #   print(1111, co)
         if co.get("symbol")[2:4] in ["00", "60"]:
+      #      print(222, co)
             all_code.append(co.get("symbol"))
-            
-code_name_list_url = "https://stock.xueqiu.com/v5/stock/batch/quote.json?symbol={0}".format(",".join(all_code))
+ 
 
-res = requests.get(code_name_list_url, headers=headers_1)
-all_code_list = res.json().get("data").get("items")
 code_list_last = []
-for code in all_code_list:
-    name = code.get("quote").get("name")
-    symbol = code.get("quote").get("symbol")
-    code_list_last.append(symbol+name)
+for i in range(0, len(all_code), 100):
+    tmp_list = all_code[i:i+100]
+    code_name_list_url = "https://stock.xueqiu.com/v5/stock/batch/quote.json?symbol={0}".format(",".join(tmp_list))
+    #print(code_name_list_url)
+    res = requests.get(code_name_list_url, headers=headers_1)
+    all_code_list = res.json().get("data").get("items")
+    for code in all_code_list:
+        name = code.get("quote").get("name")
+        symbol = code.get("quote").get("symbol")
+        code_list_last.append(symbol+name)
 
-
+print(code_list_last, len(code_list_last))
 code_list_query = [i[2:8] for i in code_list_last]
 
 
 
 
-url =  'http://98.push2.eastmoney.com/api/qt/clist/get?cb=jQuery112402803120599104636_1675409984210&pn=1&pz=3200&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&wbp2u=|0|0|0|web&fid=f3&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048&fields=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f22,f11,f62,f128,f136,f115,f152&_=1675409984211'
+url =  'http://98.push2.eastmoney.com/api/qt/clist/get?cb=jQuery112402803120599104636_1675409984210&pn=1&pz=3500&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&wbp2u=|0|0|0|web&fid=f3&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048&fields=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f22,f11,f62,f128,f136,f115,f152&_=1675409984211'
 
 res = requests.get(url=url)
 yyx_str = res.text.split('data":')[1].split("})")[0]
@@ -209,6 +218,7 @@ for i in  data:
     #print(i.get("f12")[:2])
     #if "00" == i.get("f12")[:2] and "ST" not in i.get("f14"):
     if i.get("f12")[:2] in ["60", "00"] and "ST" not in i.get("f14") and "-" !=  i.get("f10") and "-" != i.get("f3") and i.get("f12") in code_list_query:
+        #print(i.get("f14"))
         name = i.get("f14")
         code = 'SZ' + i.get("f12") if "00" == i.get("f12")[:2] else 'SH' + i.get("f12")
         zhang_fu = i.get("f3")
@@ -222,7 +232,7 @@ for i in  data:
         shang_ying_xian = (i.get("f15") - i.get("f2"))/i.get("f2")
         #shang_ying_xian = (i.get("f15") / ((dang_qian_jia / (((zhang_fu / 100) + 1))) - 1 - (zhang_fu / 100)
         #liu_tong_zhi = i.get("f21")/100000000
-        if 1 < zhang_fu < 6 and cheng_jiao_liang > 1 and dang_qian_jia > kai_pan_jia and shang_ying_xian < 0.05 and pe > 0 and huan_shou < 10:
+        if 1 < zhang_fu < 6 and cheng_jiao_liang > 1 and dang_qian_jia > kai_pan_jia and shang_ying_xian < 0.05 and huan_shou < 10:
 
             #url = "http://q.stock.sohu.com/hisHq?code=cn_{0}&start={1}&end={2}".format(code[3:], start_date.replace("-", ""), end_date.replace("-", ""))
 
