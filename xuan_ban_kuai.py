@@ -27,8 +27,8 @@ user_agent_list = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 
 headers_1 = {"user-agent": random.choice(user_agent_list),}
 
-headers = {':authority': 'stock.xueqiu.com',
-           ':method': 'GET',
+headers = {#':authority': 'stock.xueqiu.com',
+           #':method': 'GET',
            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
            'accept-encoding': 'gzip, deflate, br',
            'accept-language': 'zh-CN,zh;q=0.9',
@@ -75,7 +75,7 @@ format_string="%Y-%m-%d %H:%M:%S"
 def get_data_df(url):
     sessions = requests.session()
     sessions.mount(url, HTTP20Adapter())
-    res = sessions.get(url, headers=headers)
+    res = sessions.get(url, headers=headers, timeout=20)
     #res = requests.get(url=url, headers=headers).json()
     data_list_1 = []
     data_list = res.json().get("data").get("item")
@@ -138,7 +138,6 @@ timestamp = str(int(time.mktime(time_array)) * 1000)
 #u_time = (time.mktime(dtime.timetuple()) + 12 * 3600) * 1000
 print(timestamp)
 """
-bk_list = []
 url = "http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol=sz000002&scale=5&ma=5&datalen=1023"
 day_list = []
 res = requests.get(url=url)
@@ -146,17 +145,17 @@ for li in res.json():
     day = li.get("day")[:10]
     if day not in day_list:
         day_list.append(day)
-
+#bks = ['BK0049银行']
 print(day_list)
-for day in day_list[:-1]:
-    day += " 20:00:00"
+for day in day_list[-2:]:
+    day += " 1:00:00"
     time_array = time.strptime(day, format_string)
     timestamp = str(int(time.mktime(time_array)) * 1000)
     #u_time = (time.mktime(dtime.timetuple()) + 12 * 3600) * 1000
-    print(timestamp)
+    print(day)
     
+    bk_list = []
     if 1:
-       
         for bk in bks:
             day_url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={0}&begin={1}&period=day&type=before&count=-300&indicator=kline".format(bk[:6], timestamp)
             #print(day_url)
@@ -173,9 +172,9 @@ for day in day_list[:-1]:
                 dang_qian_jia = today_data.get('close')
                 kai_pan_jia = today_data.get('open')
                 shang_ying_xian = (high - dang_qian_jia)/dang_qian_jia
+                print(zhang_fu, bk)
                 if last_day == now_day:
                     if 1 < zhang_fu < 6 and dang_qian_jia > kai_pan_jia and shang_ying_xian < 0.03:
-                        print(zhang_fu, bk)
                         week_url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={0}&begin={1}&period=week&type=before&count=-300&indicator=kline".format(bk[:6], timestamp)
                         week_df = get_data_df(week_url)
                         day_df = calc_zb(day_df)
@@ -231,6 +230,21 @@ for day in day_list[:-1]:
                             #ma120 = today_data.get('ma120')
                             ma250 = today_data.get('ma250')
                             ma5_distance = (low - ma5)/ma5 * 100
+                        yes_ma5 = yesterday_data.get('ma5')
+                        yes_ma10 = yesterday_data.get('ma10')
+                        yes_ma20 = yesterday_data.get('ma20')
+                        yes_ma30 = yesterday_data.get('ma30')
+                        yes_ma60 = yesterday_data.get('ma60')
+                        atan5 = math.atan((ma5/yes_ma5 - 1)*100) * 180 / 3.1416
+                        atan10 = math.atan((ma10/yes_ma10 - 1)*100) * 180 / 3.1416
+                        atan20 = math.atan((ma20/yes_ma20 - 1)*100) * 180 / 3.1416
+                        atan30 = math.atan((ma30/yes_ma30 - 1)*100) * 180 / 3.1416
+                        atan60 = math.atan((ma60/yes_ma60 - 1)*100) * 180 / 3.1416
+                        #print(atan5, atan10, atan20, atan30, atan60)
+                        atan_len = 0
+                        for atan in [atan5, atan10, atan20, atan30, atan60]:
+                            if atan > 5:
+                                atan_len += 1
                         yesterday_liang = yesterday_data.get('liang')
                         fang_liang = today_liang / yesterday_liang
                         day_mavol5 = today_data.get('vol5')
@@ -274,20 +288,25 @@ for day in day_list[:-1]:
                             week_max_ma = 0
                         len_list = []
                         for x in ma_data_list:
-                            if (max_ma * 0.98) <= x:
+                            if (max_ma * 0.97) <= x:
                                 len_list.append(x)
-                        print(ya_li, dang_qian_jia, max_ma, week_max_ma, ya_li_1, fang_liang, today_liang, liang_max_5days, len(len_list), ma5_distance, day_mavol5, day_mavol10, ma5, ma10, ma20, ma30, ma60, ma250)
-                        if dang_qian_jia > max_ma and ya_li > 0.5 and ya_li_1 < 0.5 and fang_liang > 1.2 and today_liang > liang_max_5days and dang_qian_jia >= week_max_ma and ma5_distance < 1 and day_mavol5 > day_mavol10 and ma5 > ma10 and len(len_list) >=4:
-                            jun_xian_distance = (ma5 - ma60)/ma60 * 100
-                            print(2222222222, bk, jun_xian_distance)
-                            #print(day_macd, week_macd)
-                            if day_macd > 0 and 0 < jun_xian_distance < 10:# and week_macd > 0:
-                               #print(to_day_j, to_day_k, to_day_d, to_week_j,to_week_k, to_week_d)
+                        print(ya_li, dang_qian_jia, max_ma, week_max_ma, ya_li_1, fang_liang, today_liang, liang_max_5days, len(len_list), ma5_distance, day_mavol5, day_mavol10, ma5, ma10, ma20, ma30, ma60, ma250, atan_len)
+                        if dang_qian_jia > max_ma and ya_li > 0.5 and ya_li_1 < 0.5 and fang_liang > 1.2 and today_liang > liang_max_5days and dang_qian_jia >= week_max_ma and ma5_distance < 1 and day_mavol5 > day_mavol10 and ma5 > ma10 and len(len_list) >=3 and atan_len >=3:
+                            ma_data_list.sort()
+                            jun_xian_distance = (max_ma - ma_data_list[2])/ma_data_list[2] * 100
+                            #print(jun_xian_distance)
+                            if (jun_xian_distance < 2 and len(len_list) >=4) or (2 < jun_xian_distance < 5 and atan_len >=4 and len(len_list) >=4) or (jun_xian_distance > 5 and atan_len >=5):
+                                #print(2222222222, bk, jun_xian_distance, atan5, atan10, atan20, atan30, atan60)
+                                #print(day_macd, week_macd)
+                                if day_macd > 0 and 0 < jun_xian_distance < 5:# and week_macd > 0:
+                                    #print(to_day_j, to_day_k, to_day_d, to_week_j,to_week_k, to_week_d)
 
-                                if (100 > to_day_j and to_day_d < 80):# and (100 > to_week_j > to_week_k > to_week_d and to_week_d < 80):
-                                #print(3333333333)
-                                    bk_list.append(bk)
+                                    if (to_day_j > to_day_k > to_day_d and to_day_d < 80):# and (100 > to_week_j > to_week_k > to_week_d and to_week_d < 80):
+                                    #print(3333333333)
+                                        bk_list.append(bk)
         print(bk_list)
+        
+        #bk_list = ["BK0799"]
         all_code = []
         for bk in bk_list:
             bk_co_url = "https://stock.xueqiu.com/v5/stock/forum/stocks.json?ind_code={0}".format(bk[:6])
@@ -316,7 +335,7 @@ for day in day_list[:-1]:
                 name = code.get("quote").get("name")
                 symbol = code.get("quote").get("symbol")
                 code_list_last.append(symbol+name)
-
+        code_list_last = set(code_list_last)
         print(code_list_last, len(code_list_last))
         code_list_query = [i[2:8] for i in code_list_last]
 
@@ -329,10 +348,10 @@ for day in day_list[:-1]:
         #print(yyx_json)
         #data = yyx_json.get("diff")
 
-        for i in  code_list_query:
+        for code in  code_list_last:
             #print(i.get("f12")[:2])
             #if "00" == i.get("f12")[:2] and "ST" not in i.get("f14"):
-            if i[:2] in ["60", "00"] and "ST" not in i:# and i.get("f12") in code_list_query:
+            if code[2:4] in ["60", "00"] and "ST" not in code:# and i.get("f12") in code_list_query:
                 #print(i.get("f14"))
                 """
                 name = i.get("f14")
@@ -347,8 +366,8 @@ for day in day_list[:-1]:
                 pe = i.get("f9")
                 shang_ying_xian = (i.get("f15") - i.get("f2"))/i.get("f2")
                 """
-                day_url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={0}&begin={1}&period=day&type=before&count=-300&indicator=kline".format(code, timestamp)
-                #print(day_url)
+                day_url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={0}&begin={1}&period=day&type=before&count=-300&indicator=kline".format(code[:8], timestamp)
+                print(day_url)
                 day_df = get_data_df(day_url)
                 if day_df is not None:
                     #code = 'SZ' + code if "00" == code[:2] else 'SH' + code
@@ -361,16 +380,16 @@ for day in day_list[:-1]:
                     shang_ying_xian = (high - dang_qian_jia)/dang_qian_jia
                     zhang_fu = today_data.get('zhang_fu')
                     huan_shou = today_data.get('huan_shou')
-                if 1.5 < zhang_fu < 6 and cheng_jiao_e > 1 and dang_qian_jia > kai_pan_jia and shang_ying_xian < 0.05 and huan_shou < 10:
+                if 1.5 < zhang_fu < 6 and cheng_jiao_e > 0.6 and dang_qian_jia > kai_pan_jia and shang_ying_xian < 0.05 and huan_shou < 10:
                     """
                     day_url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={0}&begin={1}&period=day&type=before&count=-300&indicator=kline".format(code, timestamp)
-                    print(day_url)
+                    #print(day_url)
                     day_df = get_data_df(day_url)
                     """
                     print(1111111)
                     if day_df is not None:
                         #print(11111)
-                        week_url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={0}&begin={1}&period=week&type=before&count=-300&indicator=kline".format(code, timestamp)
+                        week_url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={0}&begin={1}&period=week&type=before&count=-300&indicator=kline".format(code[:8], timestamp)
                         week_df = get_data_df(week_url)
                         day_df = calc_zb(day_df)
                         #print(day_df.iloc[-1].to_dict())
@@ -422,8 +441,21 @@ for day in day_list[:-1]:
                         ma20 = today_data.get('ma20')
                         ma30 = today_data.get('ma30')
                         ma60 = today_data.get('ma60')
-                        #ma120 = today_data.get('ma120')
                         ma250 = today_data.get('ma250')
+                        yes_ma5 = yesterday_data.get('ma5')
+                        yes_ma10 = yesterday_data.get('ma10')
+                        yes_ma20 = yesterday_data.get('ma20')
+                        yes_ma30 = yesterday_data.get('ma30')
+                        yes_ma60 = yesterday_data.get('ma60')
+                        atan5 = math.atan((ma5/yes_ma5 - 1)*100) * 180 / 3.1416
+                        atan10 = math.atan((ma10/yes_ma10 - 1)*100) * 180 / 3.1416
+                        atan20 = math.atan((ma20/yes_ma20 - 1)*100) * 180 / 3.1416
+                        atan30 = math.atan((ma30/yes_ma30 - 1)*100) * 180 / 3.1416
+                        atan60 = math.atan((ma60/yes_ma60 - 1)*100) * 180 / 3.1416
+                        atan_len = 0
+                        for atan in [atan5, atan10, atan20, atan30, atan60]:
+                            if atan > 5:
+                                atan_len += 1
                         ma5_distance = (low - ma5)/ma5 * 100
                         yesterday_liang = yesterday_data.get('liang')
                         fang_liang = today_liang / yesterday_liang
@@ -465,16 +497,26 @@ for day in day_list[:-1]:
                                 week_max_ma = max(week_ma_data_list)
                         except Exception as e:
                             week_max_ma = 0
-                        if dang_qian_jia > max_ma and ya_li > 0.5 and ya_li_1 < 0.5 and fang_liang > 1.2 and today_liang > liang_max_5days and dang_qian_jia >= week_max_ma and ma5_distance < 1 and day_mavol5 > day_mavol10 and ma5 > ma10 > ma20 > ma30 > ma60:
-                            jun_xian_distance = (ma5 - ma60)/ma60 * 100
-                            #print(2222222222, code, jun_xian_distance)
+                        len_list = []
+                        for x in ma_data_list:
+                            if (max_ma * 0.975) <= x:
+                                len_list.append(x)
+                        #if "600020" in code:
+                        #print(code, dang_qian_jia, max_ma, ya_li, ya_li_1, fang_liang, today_liang, liang_max_5days, week_max_ma, ma5_distance, day_mavol5, day_mavol10, ma5, ma10, ma20,ma30,ma60, len(len_list), atan_len)
+                        if dang_qian_jia > max_ma and ya_li > 0.5 and ya_li_1 < 0.5 and fang_liang > 1.2 and today_liang > liang_max_5days and dang_qian_jia >= week_max_ma and ma5_distance < 1 and day_mavol5 > day_mavol10 and round(ma5, 7) >= round(ma10, 7) and len(len_list) >=4 and atan_len >=3:
+                            print(code[8:])
+                            #jun_xian_distance = (ma5 - ma60)/ma60 * 100
                             #print(day_macd, week_macd)
-                            if 1 > day_macd > 0 and jun_xian_distance < 10:# and week_macd > 0:
+                            ma_data_list.sort()
+                            jun_xian_distance = (max_ma - ma_data_list[2])/ma_data_list[2] * 100
+                            #print(jun_xian_distance)
+                            if (jun_xian_distance < 2 and len(len_list) >=4) or (2 < jun_xian_distance < 5 and atan_len >=4 and len(len_list) >=4) or (jun_xian_distance > 5 and atan_len >=5) and 1 > day_macd > 0:
+                            #if 1 > day_macd > 0 and jun_xian_distance < 10:# and week_macd > 0:
                                 #print(to_day_j, to_day_k, to_day_d, to_week_j,to_week_k, to_week_d)
                       
                                 if (100 > to_day_j and to_day_d < 80):# and (100 > to_week_j > to_week_k > to_week_d and to_week_d < 80):
                                     #print(3333333333)
-                                    gai_nian_url = "http://stockpage.10jqka.com.cn/{0}/".format(code[2:])
+                                    gai_nian_url = "http://stockpage.10jqka.com.cn/{0}/".format(code[2:8])
                                     gai_nian = requests.get(gai_nian_url, headers=headers_1).text.split('dd title="')[1].split('">')[0]
                                     #logging.info(str(dtime).split()[0] + "-->" + str(name) + " ($题材概念: " + gai_nian)
-                                    logging.info(day.split()[0] + "-->" + str(name) + " ($题材概念: " + gai_nian)
+                                    logging.info(day.split()[0] + "-->" + str(code[8:]) + " ($题材概念: " + gai_nian)
